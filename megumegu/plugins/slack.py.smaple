@@ -1,0 +1,31 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
+from . import BasePlugin
+
+import json
+import requests
+
+from ..settings import settings
+
+class Plugin(BasePlugin):
+
+    @classmethod
+    def push(cls, **kwargs):
+
+        requests.post(
+            settings.get('SLACK_WEBHOOK'),
+            data=json.dumps(
+                {
+                    'attachments': [
+                        {
+                            'title': kwargs.get('name'),
+                            'title_link': kwargs.get('url'),
+                            'text': '\n'.join([kwargs.get('title'), kwargs.get('content') if kwargs.get('content') else '']),
+                            'image_url': next(iter(kwargs.get('media_urls', [])), None)
+                        }
+                    ]
+                }
+            )
+        )
