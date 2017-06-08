@@ -79,9 +79,9 @@ def trim_html(html, start_tag, end_tag):
 def strip_tags(html):
     html = re.sub(r'<.*?>', '', html)  # 全てのタグを排除
     html = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', r' \1 ', html)  # テキストにURLが見つかれば両サイドにスペースを挿入
-    html = re.sub(r'\n[\s|　]{2,}', '', html)  # 改行後に連続する空白を削除
-    html = re.sub(r'[\s|　]{2,}', ' ', html)  # 連続する空白を1つにまとめる
-    return unescape(html.replace('\u3000', ' ').replace('\xa0', ' '))  # ユニコードの特殊文字をスペースに置換
+    html = re.sub(r'\n?[\s|　]{2,}', '', html)  # 連続する空白を削除
+    html = unescape(html.replace('\u3000', ' ').replace('\xa0', ' '))  # ユニコードの特殊文字をスペースに置換
+    return unescape(html).strip()  # &amp;nbsp;などの文字列に対応するため二度実行する
 
 def unescape(data):
     data = data.replace('&nbsp;', ' ')
