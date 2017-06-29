@@ -4,19 +4,13 @@ CREATE TABLE IF NOT EXISTS `mm_site` (
   `url` varchar(255) NOT NULL,
   `url2` varchar(255) NOT NULL,
   `schedule` varchar(100) DEFAULT NULL COMMENT 'ex. * * * * *',
+  `notification` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `enable` tinyint(1) unsigned NOT NULL DEFAULT '1',
   `comment` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `enable` (`enable`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
-
-CREATE TABLE IF NOT EXISTS `mm_notification` (
-  `site_id` varchar(255) NOT NULL,
-  `notification` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`site_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE IF NOT EXISTS `mm_option` (

@@ -14,7 +14,6 @@ class QueryMixin(object):
         return self.sql("""SELECT mm_site.id as id, name, mm_site.url as url, url2, schedule, notification, model, query_entry, query_id, query_title, query_link, query_content, start_tag, end_tag, options, mm_updates.title as last_title
                            FROM mm_site
                            LEFT JOIN mm_option ON mm_site.id = mm_option.site_id
-                           LEFT JOIN mm_notification ON mm_site.id = mm_notification.site_id
                            LEFT JOIN (
                                 SELECT max(id) as id, site_id
                                 FROM mm_updates
