@@ -11,7 +11,7 @@ class QueryMixin(object):
         raise NotImplementedError
 
     def get_sites(self):
-        return self.sql("""SELECT mm_site.id as id, name, mm_site.url as url, url2, schedule, notification, model, query_entry, query_id, query_title, query_link, query_content, start_tag, end_tag, options, mm_updates.title as last_title
+        return self.sql("""SELECT mm_site.id as id, name, mm_site.url as url, url2, schedule, notification, model, query_entry, query_id, query_title, query_link, query_content, start_tag, end_tag, options, mm_updates.hash as latest_hash, mm_updates.title as latest_title
                            FROM mm_site
                            LEFT JOIN mm_option ON mm_site.id = mm_option.site_id
                            LEFT JOIN (
@@ -22,14 +22,6 @@ class QueryMixin(object):
                            LEFT JOIN mm_updates ON mm_site.id = last_update.site_id AND mm_updates.id = last_update.id
                            WHERE mm_site.enable is True
                            """)
-
-    def get_update_hash(self, site_id, limit=2):
-        return self.sql("""SELECT hash
-                           FROM mm_updates
-                           WHERE site_id = %s
-                           ORDER BY id DESC
-                           LIMIT %s
-                           """, (site_id, limit))
 
     def insert_update(self, site_id, url, title, content, update_hash):
         param = {}
@@ -42,6 +34,11 @@ class QueryMixin(object):
         self.sql("""INSERT INTO mm_updates(%s) VALUES(%s)""", param)
 
         return self.get_last_insert_id()
+
+    def has_hash(self, site_id, update_hash):
+        return self.sql("""SELECT hash
+                           FROM mm_updates
+                           WHERE site_id = %s AND hash = %s""", (site_id, update_hash))
 
 class Mysql(QueryMixin):
 

@@ -23,7 +23,7 @@ class BaseParser(object):
         return self.next()
 
     def next(self):
-        if self.current_idx >= self.size - 1:
+        if self.current_idx > self.size - 1:
             raise StopIteration()
         idx = self.current_idx
         self.current_idx += 1

@@ -36,8 +36,8 @@ def main():
         #     'options': None,
         #     'start_tag': '',
         #     'end_tag': '',
-        #     'last_title': None,
-        #     'last_content_length': None,
+        #     'latest_hash': None,
+        #     'latest_title': None,
         #     'notification': True
         # }]
 

@@ -21,7 +21,8 @@ class Megumegu(object):
         self.name = kwargs.pop('name')
         self.url = kwargs.pop('url')
         self.url2 = kwargs.pop('url2')
-        self.last_title = kwargs.pop('last_title')
+        self.latest_hash = kwargs.pop('latest_hash')
+        self.latest_title = kwargs.pop('latest_title')
         self.model = kwargs.pop('model')
         self.query_entry = kwargs.pop('query_entry')
         self.query_title = kwargs.pop('query_title')
@@ -70,71 +71,80 @@ class Megumegu(object):
             raise e
 
     def parse_content(self):
+
         if self.content:
             try:
                 if self.model == 'DOM':
-                    self.updates.append(DomParser(data=self.content,
-                                                  url=self.url, url2=self.url2,
-                                                  query_entry=self.query_entry,
-                                                  query_title=self.query_title,
-                                                  query_id=self.query_id,
-                                                  query_link=self.query_link,
-                                                  query_content=self.query_content).parse())
+                    for update in DomParser(data=self.content,
+                                            url=self.url, url2=self.url2,
+                                            query_entry=self.query_entry,
+                                            query_title=self.query_title,
+                                            query_id=self.query_id,
+                                            query_link=self.query_link,
+                                            query_content=self.query_content):
+                        self.updates.append(update)
                 elif self.model == 'XML':
-                    self.updates.append(XmlParser(data=self.content).parse())
+                    for update in XmlParser(data=self.content):
+                        self.updates.append(update)
                 elif self.model == 'ATOM':
-                    self.updates.append(AtomParser(data=self.content).parse())
+                    for update in AtomParser(data=self.content):
+                        self.updates.append(update)
             except Exception as e:
                 logger.error('ParserError: %s (%s)' % (self.name, self.url))
                 logger.exception(e)
 
-    def notify_content(self):
-        if self.updates and \
-           self.last_title != self.updates[0]['title']:
+    def check_update(self):
 
+        # 新しいアップデートのみを抽出
+        updates = []
+        for update in self.updates:
+            if self.latest_hash == update['hash']:
+                break
+            updates.append(update)
+        self.updates = updates
+
+        # 最終処理
+        if self.updates:
+            # DBに接続
             db = Mysql(host=settings.get('MYSQL_HOST'),
                        user=settings.get('MYSQL_USER'),
                        passwd=settings.get('MYSQL_PASS'),
                        db=settings.get('MYSQL_DB'))
 
-            # 過去のアップデートからハッシュ値を照合
-            skip = False
-            for h in db.get_update_hash(self.id):
-                if 'hash' in h and h['hash'] == self.updates[0]['hash']:
-                    skip = True
-                    return
-            if skip:
-                return
+            for update in reversed(self.updates):
+                # DBに登録されているか最終確認
+                if db.has_hash(self.id, update['hash']):
+                    continue
 
-            # データベースに登録
-            db.insert_update(
-                self.id,
-                self.updates[0]['url'],
-                self.updates[0]['title'],
-                self.updates[0]['content'],
-                self.updates[0]['hash'],
-            )
+                # DBにアップデート情報を登録
+                db.insert_update(
+                    self.id,
+                    update['url'],
+                    update['title'],
+                    update['content'],
+                    update['hash'],
+                )
 
-            # 各サービスへ通知
-            if self.notification:
-                for module in plugins:
-                    try:
-                        module.Plugin.push(
-                            name=self.name,
-                            url=self.updates[0]['url'],
-                            title=self.updates[0]['title'],
-                            content=self.updates[0]['content'],
-                            media_urls=self.updates[0]['media_urls'])
-                    except Exception as e:
-                        logger.error('PluginError: %s (%s)' % (self.name, self.url))
-                        logger.exception(e)
+                # 各サービスへ通知
+                if self.notification:
+                    for module in plugins:
+                        try:
+                            module.Plugin.push(
+                                name=self.name,
+                                url=update['url'],
+                                title=update['title'],
+                                content=update['content'],
+                                media_urls=update['media_urls'])
+                        except Exception as e:
+                            logger.error('PluginError: %s (%s)' % (self.name, self.url))
+                            logger.exception(e)
 
-            print(self.updates[0])
+                print(update)
 
     def run(self):
         try:
             self.get_content()
             self.parse_content()
-            self.notify_content()
+            self.check_update()
         except Exception as e:
             logger.error(e)
