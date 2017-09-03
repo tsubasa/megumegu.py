@@ -99,12 +99,20 @@ class XmlParser(BaseParser):
 
         self.prefix = prefix
         self.namespaces = {prefix: namespaces}
-        self.query_entry = '%s:%s' % (prefix, query_entry)
-        self.query_title = '%s:%s' % (prefix, query_title)
-        self.query_link = '%s:%s' % (prefix, query_link)
-        self.query_content = '%s:%s' % (prefix, query_content)
 
+        # RSS1.0またはRSS2.0の判定
         self.data = et.fromstring(data.encode('utf_8'))
+        if self.data.tag == 'rss':
+            self.query_entry = 'channel/%s' % (query_entry)
+            self.query_title = query_title
+            self.query_link = query_link
+            self.query_content = query_content
+        else:
+            self.query_entry = '%s:%s' % (prefix, query_entry)
+            self.query_title = '%s:%s' % (prefix, query_title)
+            self.query_link = '%s:%s' % (prefix, query_link)
+            self.query_content = '%s:%s' % (prefix, query_content)
+
         self.items = self.data.xpath(self.query_entry, namespaces=self.namespaces)
         self.size = len(self.items)
 
