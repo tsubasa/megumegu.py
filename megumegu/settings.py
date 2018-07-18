@@ -143,7 +143,7 @@ if not (os.path.isfile(args.config)):
     raise FileNotFoundError(args.config)
 
 settings = Settings()
-settings.read(args.config)
+settings.read(args.config, encoding='utf-8')
 settings.set('LOG_LEVEL', LOG_LEVEL)
 
 # plugins
